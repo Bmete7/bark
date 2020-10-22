@@ -6,8 +6,8 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#ifndef BARK_MODELS_BEHAVIOR_SAFETY_BEHAVIOR_SAFETY_BEHAVIOR_HPP_
-#define BARK_MODELS_BEHAVIOR_SAFETY_BEHAVIOR_SAFETY_BEHAVIOR_HPP_
+#ifndef BARK_MODELS_BEHAVIOR_SAFETY_BEHAVIOR_BEHAVIOR_SAFETY_HPP_
+#define BARK_MODELS_BEHAVIOR_SAFETY_BEHAVIOR_BEHAVIOR_SAFETY_HPP_
 
 #include <memory>
 #include <utility>
@@ -33,13 +33,19 @@ class BehaviorSafety : public BehaviorModel {
   explicit BehaviorSafety(const ParamsPtr& params) :
     BehaviorModel(params),
     initial_lane_corr_(nullptr) {
-      safety_behavior_params_ = params->AddChild("BehaviorSafety");
-      safety_behavior_params_->SetReal("BehaviorIDMClassic::DesiredVelocity", 1.);
-      // safety_behavior_params_->SetReal(
+      behavior_safety_params_ = params->AddChild("BehaviorSafety");
+      behavior_safety_params_->SetReal("BehaviorIDMClassic::DesiredVelocity", 1.);
+      // behavior_safety_params_->SetReal(
       //   "BehaviorIDMClassic::AccelerationLowerBound", -0.5);
       behavior_model_ = std::make_shared<BehaviorIDMLaneTracking>(
-        safety_behavior_params_);
+        behavior_safety_params_);
   }
+
+  explicit BehaviorSafety(const std::shared_ptr<BehaviorSafety>& bs) :
+    BehaviorModel(bs->GetBehaviorModel()->GetParams()),
+    behavior_model_(bs->GetBehaviorModel()),
+    initial_lane_corr_(bs->GetInitialLaneCorridor()),
+    behavior_safety_params_(bs->GetBehaviorSafetyParams()) {}
 
   virtual ~BehaviorSafety() {}
 
@@ -51,28 +57,35 @@ class BehaviorSafety : public BehaviorModel {
     behavior_model_ = model;
   } 
 
+  std::shared_ptr<BehaviorModel> GetBehaviorModel() const {
+    return behavior_model_;
+  }
+
   void SetInitialLaneCorridor(const LaneCorridorPtr& lc){
     initial_lane_corr_ = lc;
   }
 
+  LaneCorridorPtr GetInitialLaneCorridor() const {
+    return initial_lane_corr_;
+  }
+
   ParamsPtr GetBehaviorSafetyParams() const {
-    return safety_behavior_params_;
+    return behavior_safety_params_;
   }
 
  private:
   std::shared_ptr<BehaviorModel> behavior_model_;
   LaneCorridorPtr initial_lane_corr_;
-  ParamsPtr safety_behavior_params_;
+  ParamsPtr behavior_safety_params_;
 };
 
 inline std::shared_ptr<BehaviorModel> BehaviorSafety::Clone() const {
-  std::shared_ptr<BehaviorSafety> model_ptr =
-      std::make_shared<BehaviorSafety>(*this);
-  return model_ptr;
+  std::shared_ptr<BehaviorSafety> new_bs = std::make_shared<BehaviorSafety>(*this);
+  return new_bs;
 }
 
 }  // namespace behavior
 }  // namespace models
 }  // namespace bark
 
-#endif  // BARK_MODELS_BEHAVIOR_SAFETY_BEHAVIOR_SAFETY_BEHAVIOR_HPP_
+#endif  // BARK_MODELS_BEHAVIOR_SAFETY_BEHAVIOR_BEHAVIOR_SAFETY_HPP_
