@@ -40,7 +40,7 @@ class BehaviorRSSConformant : public BehaviorModel {
     BehaviorModel(params),
     nominal_behavior_model_(std::make_shared<BehaviorIDMClassic>(params)),
     safety_behavior_model_(std::make_shared<BehaviorSafety>(params)),
-    rss_evaluator_(std::make_shared<EvaluatorRSS>()),
+    rss_evaluator_(std::make_shared<EvaluatorRSS>(0, params)),
     rss_behavior_status_(BehaviorRSSConformantStatus::NOMINAL_BEHAVIOR),
     world_time_of_last_rss_violation_(-1),
     initial_lane_corr_(nullptr) {}
