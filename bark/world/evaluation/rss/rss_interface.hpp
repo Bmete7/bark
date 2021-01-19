@@ -223,7 +223,7 @@ class RssInterface {
   PairwiseDirectionalEvaluationReturnTuple
   ExtractPairwiseDirectionalSafetyEvaluation(
       const ::ad::rss::state::RssStateSnapshot& snapshot,Distance lat_distance, Distance long_distance);
-
+ 
   ::ad::rss::state::ProperResponse GetRSSResponse() const {
     return rss_proper_response_;
   }
@@ -235,6 +235,14 @@ class RssInterface {
   bool longitudinalDistanceOffset(
 		const models::dynamic::State& agent_state,
 		Distance& distance);
+
+  bool
+  RetrieveLateralRSSSafetyResponse(
+	const models::dynamic::State& agent_state,
+   const models::dynamic::State& reference_agent_state,
+	Distance& distance);
+
+
   AgentState GetRssDynamics(
 		const models::dynamic::State& agent_state);
     

@@ -382,6 +382,27 @@ PairwiseEvaluationReturn RssInterface::ExtractPairwiseSafetyEvaluation(
   return is_pairwise_safe;
 }
 
+
+PairwiseSafetyDistance
+RssInterface::FillSafetyResponse(
+
+
+    const ::ad::rss::state::RssStateSnapshot& snapshot,Distance lat_distance, Distance long_distance ) {
+      
+  PairwiseSafetyDistance is_pairwise_directionally_safe;
+  for (auto const state : snapshot.individualResponses) {
+    is_pairwise_directionally_safe[static_cast<AgentId>(state.objectId)] =
+        std::make_tuple(::ad::rss::state::isLongitudinalSafe(state),
+                       ::ad::rss::state::isLateralSafe(state),
+                        lat_distance,
+                        long_distance,
+                        state.objectId) ;
+
+  }
+  return is_pairwise_directionally_safe;
+}
+
+
 PairwiseDirectionalEvaluationReturnTuple
 RssInterface::ExtractPairwiseDirectionalSafetyEvaluation(
 
@@ -471,6 +492,42 @@ PairwiseEvaluationReturn RssInterface::GetPairwiseSafetyReponse(
   return response;
 }
 
+
+
+PairwiseSafetyDistance
+RssInterface::PairwiseSafetyResponse(
+    const ObservedWorld& observed_world){
+  ::ad::rss::world::WorldModel rss_world;
+  PairwiseSafetyDistance response;
+  if (GenerateRSSWorld(observed_world, rss_world)) {
+    ::ad::rss::state::RssStateSnapshot snapshot;
+    RssCheck(rss_world, snapshot);
+    
+    
+    Distance lat_distance = 0;
+    Distance long_distance =0;
+    AgentPtr agent = observed_world.GetEgoAgent();
+    models::dynamic::State agent_state;
+    agent_state = agent->GetCurrentState();
+
+
+
+    AgentMap otherAgentsMap = observed_world.GetOtherAgents();
+    /// TODO: Replace with a for loop instead
+    AgentPtr firstRefAgent = otherAgentsMap[0]; 
+
+
+    bool latResp =  RetrieveLateralRSSSafetyResponse(agent_state, firstRefAgent, lat_distance); 
+    
+    
+    std::cout << " Lateral RSS Safety Response " << std::endl;
+    // loop for all reference agents on the map
+    /// TODO: parameters to be changed, lat_distance,long_distance,reference agent id
+    response = FillSafetyResponse(snapshot,0,0,0 ); 
+  }
+}
+
+
 PairwiseDirectionalEvaluationReturnTuple
 RssInterface::GetPairwiseDirectionalSafetyReponse(
     const ObservedWorld& observed_world) {
@@ -519,6 +576,15 @@ RssInterface::lateralDistanceOffset(
   
   return resp;
 }
+
+bool
+RssInterface::RetrieveLateralRSSSafetyResponse(
+		const models::dynamic::State& agent_state,
+    const models::dynamic::State& reference_agent_state,
+		Distance& distance){
+      return calculateSafeLateralDistance(agent_state,reference_agent_state ,distance);
+      /// second parameter to be changed
+    }
 
 bool
 RssInterface::longitudinalDistanceOffset(
