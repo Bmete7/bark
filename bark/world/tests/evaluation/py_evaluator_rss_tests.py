@@ -32,6 +32,7 @@ class TestAgent(Agent):
     """
 
     def __init__(self, init_state, goal_polygon, map_interface, params):
+        
 
         behavior_model = BehaviorConstantAcceleration(params)
         execution_model = ExecutionModelInterpolate(params)
@@ -73,7 +74,7 @@ class EvaluatorRSSTests(unittest.TestCase):
         # The safety distance seems more conservative than in the paper
         # Hard coded
         ego_state = np.array([0, 1.8, -114.9, np.pi/2, 10])
-        other_state = np.array([0, 1.8, -72.95, np.pi/2, 7])
+        other_state = np.array([0, 1.8, -72.95, np.pi/2,7])
 
         ego = TestAgent(ego_state, goal_polygon, map_interface, params)
         other = TestAgent(other_state, goal_polygon, map_interface, params)
@@ -91,6 +92,48 @@ class EvaluatorRSSTests(unittest.TestCase):
         pw_directional_evaluation_return = evaluator_rss.PairwiseDirectionalEvaluate(
             world)
         self.assertEqual(True, pw_directional_evaluation_return[other.id][0])
+        
+
+
+    def test_longitude_safety_responses(self):
+        """
+        Checking Longitudinal Responses (approximation)
+        """
+        params = ParameterServer()
+        map = "bark/runtime/tests/data/city_highway_straight.xodr"
+        params["EvaluatorRss"]["MapFilename"] = map
+
+        map_interface = EvaluatorRSSTests.load_map(map)
+        world = World(params)
+        world.SetMap(map_interface)
+
+        goal_polygon = Polygon2d(
+            [0, 0, 0], [Point2d(-1, -1), Point2d(-1, 1), Point2d(1, 1), Point2d(1, -1)])
+        goal_polygon = goal_polygon.Translate(Point2d(1.8, 140))
+
+        # The safety distance seems more conservative than in the paper
+        # Hard coded
+        ego_state = np.array([0, 1.8, -114.9, np.pi/2, 10])
+        other_state = np.array([0, 1.8, -72.95  , np.pi/2, 7])
+
+        ego = TestAgent(ego_state, goal_polygon, map_interface, params)
+        other = TestAgent(other_state, goal_polygon, map_interface, params)
+
+        world.AddAgent(ego)
+        world.AddAgent(other)
+        world.UpdateAgentRTree()
+
+        viewer = MPViewer(params=params, use_world_bounds=True)
+        viewer.drawWorld(world)
+        viewer.show(block=False)
+
+        evaluator_rss = EvaluatorRSS(ego.id, params)
+
+        pw_directional_evaluation_return = evaluator_rss.PairwiseDirectionalEvaluate(
+            world)
+        approx = evaluator_rss.TestLongDistCalc(world)
+        
+        self.assertAlmostEqual( np.round(approx,1), np.round( pw_directional_evaluation_return[other.id][2] , 1 ) )
 
     def test_longitude_highway_unsafe(self):
         """
@@ -217,7 +260,7 @@ class EvaluatorRSSTests(unittest.TestCase):
         """
         Checking Lateral Responses (true means safe)
         """
-
+        
         params = ParameterServer()
         map = "bark/runtime/tests/data/DR_DEU_Merging_MT_v01_centered.xodr"
         params["EvaluatorRss"]["MapFilename"] = map
@@ -328,7 +371,7 @@ class EvaluatorRSSTests(unittest.TestCase):
 
         evaluator_rss = EvaluatorRSS(ego.id, params)
         responses = evaluator_rss.PairwiseEvaluate(world)
-
+        
         self.assertEqual(1, len(responses))
         self.assertTrue(responses[other_1.id])
         self.assertFalse(other_2.id in responses)
@@ -337,6 +380,8 @@ class EvaluatorRSSTests(unittest.TestCase):
         """
         Test generation of longitudinal lane polygon
         """
+
+        
 
         params = ParameterServer()
         map = "bark/runtime/tests/data/city_highway_straight.xodr"
@@ -357,7 +402,7 @@ class EvaluatorRSSTests(unittest.TestCase):
         ego = TestAgent(ego_state, goal_polygon, map_interface, params)
 
         world.AddAgent(ego)
-        world.UpdateAgentRTree()
+        world.UpdateAgentRTree()  
 
         viewer = MPViewer(params=params, use_world_bounds=True)
         viewer.drawWorld(world)
