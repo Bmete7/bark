@@ -479,7 +479,7 @@ RssInterface::GetPairwiseDirectionalSafetyReponse(
   return response;
 }
 
-float RssInterface::TestLongStopDistance(
+PairwiseDirectionalEvaluationReturnTuple RssInterface::TestLongStopDistance(
     const ObservedWorld& observed_world) {
 
   AgentPtr agent = observed_world.GetEgoAgent();  
@@ -505,7 +505,18 @@ float RssInterface::TestLongStopDistance(
   dMin += speedMax * (float(rss_dynamics_ego_.responseTime) - acc_time );
   dMin += (speedMax * speedMax) / (2. * -deceleration);
 
-  return dMin;
+   
+  float latMin = 0.5 * rss_dynamics_ego_.alphaLon.brakeMin * acc_time  * rss_dynamics_ego_.responseTime ;
+  latMin += speedMax * (float(rss_dynamics_ego_.responseTime) - acc_time );
+  latMin += (speedMax * speedMax) / (2. * -deceleration);
+  latMin = (10 + rss_dynamics_ego_.responseTime * rss_dynamics_ego_.alphaLon.accelMax - speedMax ) / 2;
+  PairwiseDirectionalEvaluationReturnTuple response_object;
+  response_object[static_cast<AgentId>(0)] = std::make_tuple(true,
+                        true,
+                        dMin,
+												latMin,
+												latMin);
+  return response_object;
 }
 
 

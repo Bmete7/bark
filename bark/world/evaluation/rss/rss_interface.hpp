@@ -160,7 +160,7 @@ class RssInterface {
   PairwiseDirectionalEvaluationReturnTuple GetPairwiseDirectionalSafetyReponse(
       const ObservedWorld& observed_world);
 
-  float TestLongStopDistance(
+  PairwiseDirectionalEvaluationReturnTuple TestLongStopDistance(
       const ObservedWorld& observed_world);
 
   virtual ~RssInterface() {}

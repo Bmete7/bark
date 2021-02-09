@@ -133,7 +133,46 @@ class EvaluatorRSSTests(unittest.TestCase):
             world)
         approx = evaluator_rss.TestLongDistCalc(world)
         
-        self.assertAlmostEqual( np.round(approx,1), np.round( pw_directional_evaluation_return[other.id][2] , 1 ) )
+        self.assertAlmostEqual( np.round(approx[0][2],1), np.round( pw_directional_evaluation_return[other.id][2] , 1 ) )
+    def test_lat_safety_responses(self):
+        """
+        Checking Lateral Responses (approximation)
+        """
+        params = ParameterServer()
+        map = "bark/runtime/tests/data/city_highway_straight.xodr"
+        params["EvaluatorRss"]["MapFilename"] = map
+
+        map_interface = EvaluatorRSSTests.load_map(map)
+        world = World(params)
+        world.SetMap(map_interface)
+
+        goal_polygon = Polygon2d(
+            [0, 0, 0], [Point2d(-1, -1), Point2d(-1, 1), Point2d(1, 1), Point2d(1, -1)])
+        goal_polygon = goal_polygon.Translate(Point2d(1.8, 140))
+
+        # The safety distance seems more conservative than in the paper
+        # Hard coded
+        ego_state = np.array([0, 1.8, -114.9, np.pi/2, 10])
+        other_state = np.array([0, 1.8, -72.95  , np.pi/2, 7])
+
+        ego = TestAgent(ego_state, goal_polygon, map_interface, params)
+        other = TestAgent(other_state, goal_polygon, map_interface, params)
+
+        world.AddAgent(ego)
+        world.AddAgent(other)
+        world.UpdateAgentRTree()
+
+        viewer = MPViewer(params=params, use_world_bounds=True)
+        viewer.drawWorld(world)
+        viewer.show(block=False)
+
+        evaluator_rss = EvaluatorRSS(ego.id, params)
+
+        pw_directional_evaluation_return = evaluator_rss.PairwiseDirectionalEvaluate(
+            world)
+        approx = evaluator_rss.TestLongDistCalc(world)
+        self.assertAlmostEqual( np.round(approx[0][3],1), np.round( pw_directional_evaluation_return[other.id][3] , 1 ) )
+        self.assertAlmostEqual( np.round(approx[0][4],1), np.round( pw_directional_evaluation_return[other.id][4] , 1 ) )
 
     def test_longitude_highway_unsafe(self):
         """
