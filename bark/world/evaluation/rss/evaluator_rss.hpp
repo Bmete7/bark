@@ -146,6 +146,18 @@ class EvaluatorRSS : public BaseEvaluator {
     return rss_.GetPairwiseDirectionalSafetyReponse(observed_world);
   };
 
+  virtual PairwiseDirectionalEvaluationReturnTuple TestLongDistCalc(
+      const World& world) {
+    WorldPtr cloned_world = world.Clone();
+    ObservedWorld observed_world = cloned_world->Observe({agent_id_})[0];
+    return rss_.TestLongStopDistance(observed_world);
+  };
+
+  virtual PairwiseDirectionalEvaluationReturnTuple TestLongDistCalc(
+      const ObservedWorld& observed_world) {
+    return rss_.TestLongStopDistance(observed_world);
+  };
+
 	virtual Polygon GetLaneLongitudinalPolygon(
 			const World& world, const double& lon_distance) {
     WorldPtr cloned_world = world.Clone();

@@ -479,6 +479,48 @@ RssInterface::GetPairwiseDirectionalSafetyReponse(
   return response;
 }
 
+PairwiseDirectionalEvaluationReturnTuple RssInterface::TestLongStopDistance(
+    const ObservedWorld& observed_world) {
+
+  AgentPtr agent = observed_world.GetEgoAgent();  
+  AgentId agent_id = observed_world.GetEgoAgentId();
+
+  const auto center = agent->GetGoalDefinition()->GetShape().center_;
+  Point2d agent_goal(center[0], center[1]);
+
+  models::dynamic::State agent_state;
+  agent_state = agent->GetCurrentState(); 
+  
+  AgentState agent_rss_state =
+      ConvertAgentState(agent_state, rss_dynamics_ego_);
+        
+  //      Speed speedMax = std::min(rss_dynamics_ego_.maxSpeedOnAcceleration,);
+
+  Speed speedMax  = 10 + rss_dynamics_ego_.responseTime * rss_dynamics_ego_.alphaLon.accelMax;
+  Speed s = 10;
+  float acc_time = rss_dynamics_ego_.responseTime;
+  float dMin = 10 * acc_time ;
+  float deceleration = -3.1;
+  dMin += 0.5 * rss_dynamics_ego_.alphaLon.accelMax * acc_time  * rss_dynamics_ego_.responseTime ;
+  dMin += speedMax * (float(rss_dynamics_ego_.responseTime) - acc_time );
+  dMin += (speedMax * speedMax) / (2. * -deceleration);
+
+   
+  float latMin = 0.5 * rss_dynamics_ego_.alphaLon.brakeMin * acc_time  * rss_dynamics_ego_.responseTime ;
+  latMin += speedMax * (float(rss_dynamics_ego_.responseTime) - acc_time );
+  latMin += (speedMax * speedMax) / (2. * -deceleration);
+  latMin = (10 + rss_dynamics_ego_.responseTime * rss_dynamics_ego_.alphaLon.accelMax - speedMax ) / 2;
+  PairwiseDirectionalEvaluationReturnTuple response_object;
+  response_object[static_cast<AgentId>(0)] = std::make_tuple(true,
+                        true,
+                        dMin,
+												latMin,
+												latMin);
+  return response_object;
+}
+
+
+
 }  // namespace evaluation
 }  // namespace world
 }  // namespace bark

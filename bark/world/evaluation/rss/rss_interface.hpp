@@ -160,6 +160,9 @@ class RssInterface {
   PairwiseDirectionalEvaluationReturnTuple GetPairwiseDirectionalSafetyReponse(
       const ObservedWorld& observed_world);
 
+  PairwiseDirectionalEvaluationReturnTuple TestLongStopDistance(
+      const ObservedWorld& observed_world);
+
   virtual ~RssInterface() {}
 
   // Load OpenDrive map into RSS, needed for GetMatchObject and GenerateRoute.
